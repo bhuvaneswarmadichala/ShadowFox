@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Autocorrect Keyboard</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(to right, #d9a7c7, #fffcdc);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+      max-width: 700px;
+      width: 90%;
+      animation: fadeIn 0.8s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2.5em;
+      color: #4b0082;
+      margin-bottom: 20px;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 15px;
+      font-size: 1.1em;
+      border: 2px solid #ccc;
+      border-radius: 10px;
+      resize: vertical;
+      transition: all 0.3s ease;
+    }
+
+    textarea:focus {
+      border-color: #4b0082;
+      box-shadow: 0 0 8px rgba(75, 0, 130, 0.2);
+      outline: none;
+    }
+
+    button {
+      width: 100%;
+      background: linear-gradient(to right, #4b0082, #8a2be2);
+      color: white;
+      padding: 15px;
+      font-size: 1.1em;
+      border: none;
+      border-radius: 10px;
+      margin-top: 15px;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+    button:hover {
+      background: linear-gradient(to right, #6a0dad, #9932cc);
+      transform: scale(1.03);
+    }
+
+    #error {
+      color: red;
+      margin-top: 10px;
+      font-weight: bold;
+      display: none;
+    }
+
+    #results {
+      margin-top: 25px;
+      display: none;
+    }
+
+    #correctedText {
+      background: #f0f8ff;
+      padding: 15px;
+      border-radius: 10px;
+      font-size: 1.1em;
+      color: #333;
+    }
+
+    #predictions {
+      margin-top: 15px;
+      padding-left: 20px;
+      color: #444;
+    }
+
+    #predictions li {
+      margin-bottom: 8px;
+    }
+
+    .section-title {
+      margin-top: 20px;
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #4b0082;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>✨ Autocorrect Keyboard</h1>
+    <textarea id="inputText" rows="5" placeholder="Enter your text here..."></textarea>
+    <button id="submitBtn">🚀 Process Text</button>
+    <div id="error">Something went wrong.</div>
+    <div id="results">
+      <div class="section-title">✅ Corrected Text:</div>
+      <div id="correctedText"></div>
+      <div class="section-title">🔮 Word Predictions:</div>
+      <ul id="predictions"></ul>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('submitBtn').addEventListener('click', async () => {
+      const inputText = document.getElementById('inputText').value;
+      const errorDiv = document.getElementById('error');
+      const resultsDiv = document.getElementById('results');
+      const correctedText = document.getElementById('correctedText');
+      const predictionsList = document.getElementById('predictions');
+
+      errorDiv.style.display = 'none';
+      resultsDiv.style.display = 'none';
+      correctedText.textContent = '';
+      predictionsList.innerHTML = '';
+
+      try {
+        const response = await fetch('/process', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: inputText })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          correctedText.textContent = data.corrected_text;
+          data.predictions.forEach(pred => {
+            const li = document.createElement('li');
+            li.textContent = `After "${pred.word}": ${pred.next_words.join(', ') || 'No predictions'}`;
+            predictionsList.appendChild(li);
+          });
+          resultsDiv.style.display = 'block';
+        } else {
+          errorDiv.textContent = data.error;
+          errorDiv.style.display = 'block';
+        }
+      } catch (err) {
+        errorDiv.textContent = 'An error occurred. Please try again.';
+        errorDiv.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>
